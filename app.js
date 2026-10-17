@@ -29,11 +29,13 @@
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
   const form = document.getElementById('consult-form');
   let submitting = false;
+  // 페이지를 열어 둔 동안만 중복을 확인하며 고객 정보를 기기에 저장하지 않습니다.
+  const savedSubmissions = new Set();
+  const emailedSubmissions = new Set();
   form.addEventListener('submit', async event => {
     event.preventDefault();
-    if (submitting || !form.reportValidity()) return;
+    if (submitting || !form.reportValidity() || form.elements._honey.value) return;
     const status = document.getElementById('copy-status');
-    if (form.elements._honey.value) return;
     const payload = {
       customer_name: document.getElementById('customer-name').value.trim(),
       email: document.getElementById('customer-email').value.trim(),
@@ -45,41 +47,62 @@
       status.textContent = '성함과 문의 내용을 입력해 주세요.';
       return;
     }
+    const signature = JSON.stringify(payload);
+    if (emailedSubmissions.has(signature)) {
+      status.textContent = '이미 접수한 내용입니다. 추가 문의는 내용을 변경해 주세요.';
+      return;
+    }
     submitting = true;
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
     form.setAttribute('aria-busy', 'true');
-    status.textContent = '문의 내용을 저장하고 있습니다…';
-    let saved = false;
     try {
-      const response = await fetch(config.supabase.url + '/rest/v1/inquiries', {
+      if (!savedSubmissions.has(signature)) {
+        status.textContent = '문의 내용을 저장하고 있습니다…';
+        const response = await fetch(config.supabase.url + '/rest/v1/inquiries', {
+          method: 'POST',
+          headers: { apikey: config.supabase.publishableKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: signature,
+          signal: AbortSignal.timeout(20000)
+        });
+        if (!response.ok) {
+          status.textContent = response.status === 401 || response.status === 403
+            ? '저장 권한 설정을 확인해 주세요. 문의는 전송되지 않았습니다.'
+            : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+          return;
+        }
+        savedSubmissions.add(signature);
+      }
+      status.textContent = '문의가 저장되었습니다. 이메일 알림을 요청하고 있습니다…';
+      const mailResponse = await fetch('https://formsubmit.co/ajax/c72unix@gmail.com', {
         method: 'POST',
-        headers: { apikey: config.supabase.publishableKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: payload.customer_name,
+          email: payload.email,
+          phone: payload.phone || '미입력',
+          service: payload.service,
+          message: payload.message,
+          _subject: '[MK컴퓨터] 새로운 고객 상담 문의',
+          _template: 'table',
+          _url: 'https://lim-kyoung-jin.github.io/mkcomputer/'
+        }),
         signal: AbortSignal.timeout(20000)
       });
-      if (!response.ok) {
-        status.textContent = response.status === 401 || response.status === 403
-          ? '저장 권한 설정을 확인해 주세요. 문의는 전송되지 않았습니다.'
-          : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
-        return;
+      const result = await mailResponse.json();
+      if (!mailResponse.ok || !(result.success === true || result.success === 'true')) {
+        throw new Error('Email request rejected');
       }
-      saved = true;
-      status.textContent = '데이터베이스에 저장했습니다. 이메일 전송 화면으로 이동합니다…';
-      // 데이터베이스 저장에 성공한 경우에만 기존 이메일 전송으로 이어집니다.
-      HTMLFormElement.prototype.submit.call(form);
+      emailedSubmissions.add(signature);
+      status.textContent = '문의가 저장되었고 이메일 서비스가 알림 요청을 접수했습니다. 매장에서 확인 후 답변드리겠습니다.';
     } catch (error) {
-      status.textContent = saved
-        ? '문의는 데이터베이스에 저장되었습니다. 이메일 화면을 열지 못했습니다.'
-        : '연결 상태를 확인하지 못했습니다. 매장에 접수 여부를 확인한 뒤 다시 시도해 주세요.';
+      status.textContent = savedSubmissions.has(signature)
+        ? '문의는 정상 저장됐지만 이메일 알림 요청을 확인하지 못했습니다. 같은 내용으로 다시 누르면 저장을 건너뛰고 이메일만 재시도합니다. 페이지를 새로고침하지 마세요.'
+        : '연결 상태를 확인하지 못했습니다. 중복 접수를 피하려면 매장에 접수 여부를 확인해 주세요.';
     } finally {
-      if (!saved) {
-        submitting = false;
-        submit.disabled = false;
-        form.removeAttribute('aria-busy');
-      }
+      submitting = false;
+      submit.disabled = false;
+      form.removeAttribute('aria-busy');
     }
   });
 })();
-
-
