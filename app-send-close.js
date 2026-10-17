@@ -56,7 +56,6 @@
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
     form.setAttribute('aria-busy', 'true');
-    dialog.close();
     try {
       if (!savedSubmissions.has(signature)) {
         status.textContent = '문의 내용을 저장하고 있습니다…';
@@ -95,22 +94,11 @@
         throw new Error('Email request rejected');
       }
       emailedSubmissions.add(signature);
-      status.textContent = '문의가 저장되었고 이메일 서비스가 알림 요청을 접수했습니다. 매장에서 확인 후 답변드리겠습니다.';
+      status.textContent = '정상적으로 접수되었습니다. 잠시 후 창이 닫힙니다.';
+      // 서비스 접수 응답까지 확인한 후 안내를 읽을 시간을 제공합니다.
+      await new Promise(resolve => setTimeout(resolve, 2000));
       form.reset();
       dialog.close();
-      let notice = document.getElementById('consult-notice');
-      if (!notice) {
-        notice = document.createElement('div');
-        notice.id = 'consult-notice';
-        notice.className = 'consult-notice';
-        notice.setAttribute('role', 'status');
-        notice.setAttribute('aria-live', 'polite');
-        document.body.append(notice);
-      }
-      notice.textContent = '문의가 접수되었습니다. 확인 후 답변드리겠습니다.';
-      notice.hidden = false;
-      clearTimeout(notice.hideTimer);
-      notice.hideTimer = setTimeout(() => { notice.hidden = true; }, 6000);
     } catch (error) {
       status.textContent = savedSubmissions.has(signature)
         ? '문의는 정상 저장됐지만 이메일 알림 요청을 확인하지 못했습니다. 같은 내용으로 다시 누르면 저장을 건너뛰고 이메일만 재시도합니다. 페이지를 새로고침하지 마세요.'
@@ -136,6 +124,7 @@
     }
   });
 })();
+
 
 
 
