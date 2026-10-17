@@ -11,3 +11,6 @@
 .consent input{margin-top:4px;accent-color:var(--ink);flex-shrink:0}
 #consult-form button:disabled{opacity:.6;cursor:wait;transform:none}
 .consult-notice{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;width:max-content;max-width:calc(100% - 40px);padding:16px 24px;border-radius:10px;background:var(--ink);color:white;font-size:14px;box-shadow:0 8px 30px #10251e30;text-align:center}.consult-notice[hidden]{display:none}
+/* 섹션으로 이동해도 상단 메뉴를 유지합니다. */
+.header{position:sticky;top:0;z-index:100;background:var(--paper);box-shadow:0 1px 0 var(--line)}
+@media(max-width:760px){.header{position:sticky;top:0}}
