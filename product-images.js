@@ -1,4 +1,4 @@
-﻿/* 추천 PC의 사진만 교체하며 기존 상품 문구와 배경은 유지합니다. */
+/* 추천 PC의 사진만 교체하며 기존 상품 문구와 배경은 유지합니다. */
 (() => {
   'use strict';
   const slots = { office: 'product-office', gaming: 'product-gaming', creator: 'product-creator' };
@@ -7,7 +7,9 @@
   document.querySelectorAll('.product[data-category]').forEach(card => {
     if (card.dataset.imageRequested) return;
     const id = card.dataset.productId;
-    const slot = id === 'office-2' ? 'product-office-2' : id === 'office-3' ? 'product-office-3' : slots[card.dataset.category];
+    const requested = card.dataset.imageSlot;
+    const safeSlot = /^(product-(office(?:-[23])?|gaming|creator)|product-[a-f0-9]{32})$/.test(requested || '') ? requested : '';
+    const slot = safeSlot || (id === 'office-2' ? 'product-office-2' : id === 'office-3' ? 'product-office-3' : slots[card.dataset.category]);
     const art = card.querySelector('.product-art');
     const original = art && art.querySelector('svg');
     if (!slot || !original) return;
@@ -30,3 +32,4 @@
   };
   window.MK_APPLY_PRODUCT_IMAGES();
 })();
+

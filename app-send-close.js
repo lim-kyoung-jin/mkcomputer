@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   'use strict';
   const config = window.MK_CONFIG;
   const fallback = { address: '[임시] 실제 매장 주소 입력 예정', phone: '[임시] 전화번호 입력 예정', hours: '[임시] 영업시간 입력 예정' };
@@ -10,7 +10,7 @@
   function renderProducts(products) {
   list.replaceChildren();
   products.forEach((p,i) => {
-    const article = document.createElement('article'); article.className = 'product'; article.dataset.category = p.category; article.dataset.productId = p.id || p.category;
+    const article = document.createElement('article'); article.className = 'product'; article.dataset.category = p.category; article.dataset.productId = p.id || p.category; article.dataset.imageSlot = p.imageSlot || "";
     const art = document.createElement('div'); art.className = 'product-art ' + p.color; art.innerHTML = '<span>MK / CUSTOM BUILD 0' + (i+1) + '</span>' + pc(p.color,p.category === 'gaming' ? 1 : p.category === 'creator' ? 2 : 0); article.append(art);
     const body = document.createElement('div'); body.className='product-body';
     const tag=document.createElement('p'); tag.className='eyebrow';tag.textContent=p.tag;
@@ -150,6 +150,7 @@
     }
   });
 })();
+
 
 
 
