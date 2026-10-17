@@ -56,6 +56,7 @@
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
     form.setAttribute('aria-busy', 'true');
+    dialog.close();
     try {
       if (!savedSubmissions.has(signature)) {
         status.textContent = '문의 내용을 저장하고 있습니다…';
@@ -115,10 +116,12 @@
         ? '문의는 정상 저장됐지만 이메일 알림 요청을 확인하지 못했습니다. 같은 내용으로 다시 누르면 저장을 건너뛰고 이메일만 재시도합니다. 페이지를 새로고침하지 마세요.'
         : '연결 상태를 확인하지 못했습니다. 중복 접수를 피하려면 매장에 접수 여부를 확인해 주세요.';
     } finally {
+      if (!emailedSubmissions.has(signature) && !dialog.open) dialog.showModal();
       submitting = false;
       submit.disabled = false;
       form.removeAttribute('aria-busy');
     }
   });
 })();
+
 
