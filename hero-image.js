@@ -1,4 +1,4 @@
-/* 원래 히어로 프레임과 모든 문구를 유지하고 컴퓨터 그림만 교체합니다. */
+/* 원래 문구와 카드를 유지하고 사진 가장자리를 배경에 부드럽게 섞습니다. */
 (() => {
   'use strict';
   const art = document.querySelector('.hero-art');
@@ -7,18 +7,28 @@
   const image = new Image();
   image.alt = 'MK컴퓨터 조립 컴퓨터';
   image.decoding = 'async';
-  image.className = 'pc-hero managed-pc-photo';
+  image.className = 'managed-pc-photo';
+  const edgeMask = 'linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%)';
   Object.assign(image.style, {
-    position: 'absolute', left: '12%', top: '15%',
-    width: '76%', height: '74%', objectFit: 'contain',
-    filter: 'drop-shadow(0 15px 12px rgba(48,77,51,.16))', zIndex: '0'
+    display: 'block', width: 'auto', height: 'auto',
+    maxWidth: '100%', maxHeight: '100%', objectFit: 'contain',
+    maskImage: edgeMask, maskSize: '100% 100%', maskRepeat: 'no-repeat',
+    maskComposite: 'intersect',
+    webkitMaskImage: edgeMask, webkitMaskSize: '100% 100%',
+    webkitMaskRepeat: 'no-repeat', webkitMaskComposite: 'source-in'
   });
   const base = 'https://gmvwhsigslrywkjusxlm.supabase.co/storage/v1/object/public/website-images/hero/';
   let triedLegacy = false;
   image.onload = () => {
+    const layer = document.createElement('div');
+    layer.className = 'managed-pc-layer';
+    Object.assign(layer.style, {
+      position: 'absolute', left: '12%', top: '15%', width: '76%', height: '74%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '0'
+    });
+    layer.appendChild(image);
     original.style.display = 'none';
-    art.insertBefore(image, original);
-    // 카드와 레이블은 기존 위치에서 항상 사진 위에 표시합니다.
+    art.insertBefore(layer, original);
     art.querySelectorAll('.floating-tag, .art-label, .art-number').forEach(el => {
       el.style.zIndex = '2';
     });
@@ -28,7 +38,6 @@
       triedLegacy = true;
       image.src = base + 'main.jpg?v=' + Date.now();
     }
-    // 아직 등록된 사진이 없으면 원래 컴퓨터 일러스트를 유지합니다.
   };
   image.src = base + 'main.png?v=' + Date.now();
 })();
