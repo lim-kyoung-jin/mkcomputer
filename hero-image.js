@@ -1,43 +1,73 @@
-/* 원래 문구와 카드를 유지하고 사진 가장자리를 배경에 부드럽게 섞습니다. */
+/* 기존 상단 틀과 문구를 유지하면서 공개 상품 사진을 순환합니다. */
 (() => {
   'use strict';
   const art = document.querySelector('.hero-art');
   const original = art && art.querySelector('svg.pc-hero');
   if (!original) return;
-  const image = new Image();
-  image.alt = 'MK컴퓨터 조립 컴퓨터';
-  image.decoding = 'async';
-  image.className = 'managed-pc-photo';
-  const edgeMask = 'linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%)';
-  Object.assign(image.style, {
-    display: 'block', width: 'auto', height: 'auto',
-    maxWidth: '100%', maxHeight: '100%', objectFit: 'contain',
-    maskImage: edgeMask, maskSize: '100% 100%', maskRepeat: 'no-repeat',
-    maskComposite: 'intersect',
-    webkitMaskImage: edgeMask, webkitMaskSize: '100% 100%',
-    webkitMaskRepeat: 'no-repeat', webkitMaskComposite: 'source-in'
+  const layer = document.createElement('div');
+  layer.className = 'managed-pc-layer';
+  Object.assign(layer.style, {
+    position: 'absolute', left: '12%', top: '15%', width: '76%', height: '74%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '0'
   });
+  art.insertBefore(layer, original);
+  art.querySelectorAll('.floating-tag, .art-label, .art-number').forEach(el => { el.style.zIndex = '2'; });
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const base = 'https://gmvwhsigslrywkjusxlm.supabase.co/storage/v1/object/public/website-images/hero/';
-  let triedLegacy = false;
-  image.onload = () => {
-    const layer = document.createElement('div');
-    layer.className = 'managed-pc-layer';
-    Object.assign(layer.style, {
-      position: 'absolute', left: '12%', top: '15%', width: '76%', height: '74%',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '0'
-    });
-    layer.appendChild(image);
-    original.style.display = 'none';
-    art.insertBefore(layer, original);
-    art.querySelectorAll('.floating-tag, .art-label, .art-number').forEach(el => {
-      el.style.zIndex = '2';
-    });
+  const edgeMask = 'linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%)';
+  let active = null;
+  let currentSource = '';
+  let requestId = 0;
+  const photos = () => {
+    const seen = new Set();
+    return [...document.querySelectorAll('.product[data-category] .product-art img')]
+      .filter(img => img.complete && img.naturalWidth > 0)
+      .filter(img => { const key = img.src.split('?')[0]; if (seen.has(key)) return false; seen.add(key); return true; });
   };
-  image.onerror = () => {
-    if (!triedLegacy) {
-      triedLegacy = true;
-      image.src = base + 'main.jpg?v=' + Date.now();
-    }
-  };
-  image.src = base + 'main.png?v=' + Date.now();
+  function show(src, alt, fallback = false) {
+    if (src === currentSource) return;
+    const token = ++requestId;
+    const image = new Image();
+    image.alt = alt;
+    image.decoding = 'async';
+    image.className = 'managed-pc-photo';
+    Object.assign(image.style, {
+      position: 'absolute', display: 'block', width: 'auto', height: 'auto',
+      maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', opacity: '0',
+      transition: reducedMotion.matches ? 'none' : 'opacity 650ms ease',
+      maskImage: edgeMask, maskSize: '100% 100%', maskRepeat: 'no-repeat', maskComposite: 'intersect',
+      webkitMaskImage: edgeMask, webkitMaskSize: '100% 100%', webkitMaskRepeat: 'no-repeat', webkitMaskComposite: 'source-in'
+    });
+    image.onload = () => {
+      if (token !== requestId || (fallback && photos().length)) return;
+      const previous = active;
+      active = image;
+      currentSource = src;
+      layer.appendChild(image);
+      original.style.display = 'none';
+      requestAnimationFrame(() => {
+        image.style.opacity = '1';
+        if (previous) previous.style.opacity = '0';
+      });
+      if (previous) setTimeout(() => previous.remove(), 700);
+    };
+    image.onerror = () => {
+      if (token === requestId && fallback && src.includes('main.png')) show(base + 'main.jpg?v=' + Date.now(), alt, true);
+    };
+    image.src = src;
+  }
+  function advance() {
+    if (document.hidden) return;
+    const items = photos();
+    if (!items.length) return;
+    const index = items.findIndex(img => img.src === currentSource);
+    const next = items[(index + 1) % items.length];
+    show(next.src, next.alt);
+  }
+  show(base + 'main.png?v=' + Date.now(), 'MK컴퓨터 조립 컴퓨터', true);
+  // 카드의 필터 선택과 관계없이 모든 공개 상품의 등록 사진을 순환합니다.
+  document.addEventListener('mk-product-image-ready', () => {
+    if (!photos().some(img => img.src === currentSource)) advance();
+  });
+  setInterval(advance, 4000);
 })();

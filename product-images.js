@@ -25,6 +25,7 @@
     image.onload = () => {
       original.style.display = 'none';
       art.insertBefore(image, original);
+      document.dispatchEvent(new Event('mk-product-image-ready'));
     };
     image.onerror = () => { /* 등록하지 않은 상품은 원래 일러스트를 사용합니다. */ };
     image.src = base + slot + '.png?v=' + Date.now();
@@ -32,4 +33,5 @@
   };
   window.MK_APPLY_PRODUCT_IMAGES();
 })();
+
 
