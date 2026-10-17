@@ -13,4 +13,28 @@
 .consult-notice{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;width:max-content;max-width:calc(100% - 40px);padding:16px 24px;border-radius:10px;background:var(--ink);color:white;font-size:14px;box-shadow:0 8px 30px #10251e30;text-align:center}.consult-notice[hidden]{display:none}
 /* 섹션으로 이동해도 상단 메뉴를 유지합니다. */
 .header{position:sticky;top:0;z-index:100;background:var(--paper);box-shadow:0 1px 0 var(--line)}
+
+/* 모눈종이 배경: 선의 진하기와 간격은 아래 변수로 조절합니다. */
+:root{
+  --grid-small:24px;
+  --grid-large:120px;
+  --grid-fine:rgba(77,108,88,.065);
+  --grid-bold:rgba(77,108,88,.10);
+}
+body,.products-section{
+  background-image:
+    url('background-circles.svg'),
+    linear-gradient(to right,var(--grid-bold) 1px,transparent 1px),
+    linear-gradient(to bottom,var(--grid-bold) 1px,transparent 1px),
+    linear-gradient(to right,var(--grid-fine) 1px,transparent 1px),
+    linear-gradient(to bottom,var(--grid-fine) 1px,transparent 1px);
+  background-size:
+    1440px 1500px,
+    var(--grid-large) var(--grid-large),var(--grid-large) var(--grid-large),
+    var(--grid-small) var(--grid-small),var(--grid-small) var(--grid-small);
+  background-position:center top,0 0,0 0,0 0,0 0;
+  background-repeat:repeat,repeat,repeat,repeat,repeat;
+}
+.service{background-color:var(--paper)}
+@media print{body,.products-section{background-image:none}}
 @media(max-width:760px){.header{position:sticky;top:0}}
