@@ -1,0 +1,13 @@
+
+{
+  "name": "MK컴퓨터",
+  "short_name": "MK컴퓨터",
+  "description": "조립PC, 컴퓨터 수리, 업그레이드 및 CCTV 설치 전문점",
+  "lang": "ko-KR",
+  "start_url": "/mkcomputer/",
+  "scope": "/mkcomputer/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#2563eb",
+  "icons": []
+}
