@@ -23,7 +23,7 @@
 }
 body,.products-section{
   background-image:
-    url('background-circles.svg'),
+    url('background-circles.svg?v=2-whole-circles'),
     linear-gradient(to right,var(--grid-bold) 1px,transparent 1px),
     linear-gradient(to bottom,var(--grid-bold) 1px,transparent 1px),
     linear-gradient(to right,var(--grid-fine) 1px,transparent 1px),
@@ -38,3 +38,4 @@ body,.products-section{
 .service{background-color:var(--paper)}
 @media print{body,.products-section{background-image:none}}
 @media(max-width:760px){.header{position:sticky;top:0}}
+
