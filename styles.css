@@ -23,19 +23,20 @@
 }
 body,.products-section{
   background-image:
-    url('background-circles.svg?v=2-whole-circles'),
+
     linear-gradient(to right,var(--grid-bold) 1px,transparent 1px),
     linear-gradient(to bottom,var(--grid-bold) 1px,transparent 1px),
     linear-gradient(to right,var(--grid-fine) 1px,transparent 1px),
     linear-gradient(to bottom,var(--grid-fine) 1px,transparent 1px);
   background-size:
-    1440px 1500px,
+
     var(--grid-large) var(--grid-large),var(--grid-large) var(--grid-large),
     var(--grid-small) var(--grid-small),var(--grid-small) var(--grid-small);
-  background-position:center top,0 0,0 0,0 0,0 0;
-  background-repeat:repeat,repeat,repeat,repeat,repeat;
+  background-position:0 0;
+  background-repeat:repeat;
 }
 .service{background-color:var(--paper)}
 @media print{body,.products-section{background-image:none}}
 @media(max-width:760px){.header{position:sticky;top:0}}
+
 
