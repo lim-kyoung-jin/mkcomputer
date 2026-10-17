@@ -32,6 +32,7 @@
   // 페이지를 열어 둔 동안만 중복을 확인하며 고객 정보를 기기에 저장하지 않습니다.
   const savedSubmissions = new Set();
   const emailedSubmissions = new Set();
+  const submissionTimes = new Map();
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (submitting || !form.reportValidity() || form.elements._honey.value) return;
@@ -51,6 +52,13 @@
     if (emailedSubmissions.has(signature)) {
       status.textContent = '이미 접수한 내용입니다. 추가 문의는 내용을 변경해 주세요.';
       return;
+    }
+    if (!submissionTimes.has(signature)) {
+      const koreanTime = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul', year: 'numeric', month: 'long', day: 'numeric',
+        weekday: 'long', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
+      }).format(new Date());
+      submissionTimes.set(signature, koreanTime + ' (한국시간 KST, UTC+9)');
     }
     submitting = true;
     const submit = form.querySelector('[type="submit"]');
@@ -83,6 +91,7 @@
           phone: payload.phone || '미입력',
           service: payload.service,
           message: payload.message,
+          '접수일시 (한국시간)': submissionTimes.get(signature),
           _subject: '[MK컴퓨터] 새로운 고객 상담 문의',
           _template: 'table',
           _url: 'https://lim-kyoung-jin.github.io/mkcomputer/'
@@ -124,6 +133,7 @@
     }
   });
 })();
+
 
 
 
