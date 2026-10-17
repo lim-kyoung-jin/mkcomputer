@@ -10,3 +10,4 @@
 #consult-form .consent{display:flex;align-items:flex-start;gap:9px;font-size:11px;font-weight:400;line-height:1.8;margin:16px 0 20px}
 .consent input{margin-top:4px;accent-color:var(--ink);flex-shrink:0}
 #consult-form button:disabled{opacity:.6;cursor:wait;transform:none}
+.consult-notice{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;width:max-content;max-width:calc(100% - 40px);padding:16px 24px;border-radius:10px;background:var(--ink);color:white;font-size:14px;box-shadow:0 8px 30px #10251e30;text-align:center}.consult-notice[hidden]{display:none}
