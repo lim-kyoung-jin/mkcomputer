@@ -13,6 +13,8 @@
   art.insertBefore(layer, original);
   art.querySelectorAll('.floating-tag, .art-label, .art-number').forEach(el => { el.style.zIndex = '2'; });
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const transitionMs = 1400;
+  const slideIntervalMs = 5500;
   const base = 'https://gmvwhsigslrywkjusxlm.supabase.co/storage/v1/object/public/website-images/hero/';
   const edgeMask = 'linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%), linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%)';
   let active = null;
@@ -34,11 +36,14 @@
     Object.assign(image.style, {
       position: 'absolute', display: 'block', width: 'auto', height: 'auto',
       maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', opacity: '0',
-      transition: reducedMotion.matches ? 'none' : 'opacity 650ms ease',
+      transition: reducedMotion.matches ? 'none' : 'opacity ' + transitionMs + 'ms cubic-bezier(.4, 0, .2, 1)',
+      willChange: 'opacity', pointerEvents: 'none',
       maskImage: edgeMask, maskSize: '100% 100%', maskRepeat: 'no-repeat', maskComposite: 'intersect',
       webkitMaskImage: edgeMask, webkitMaskSize: '100% 100%', webkitMaskRepeat: 'no-repeat', webkitMaskComposite: 'source-in'
     });
-    image.onload = () => {
+    image.onload = async () => {
+      // 디코딩과 첫 화면 준비가 끝난 다음 전환해야 첫 프레임이 튀지 않습니다.
+      try { await image.decode(); } catch { /* 이미 로드된 이미지는 그대로 표시합니다. */ }
       if (token !== requestId || (fallback && photos().length)) return;
       const previous = active;
       active = image;
@@ -46,10 +51,13 @@
       layer.appendChild(image);
       original.style.display = 'none';
       requestAnimationFrame(() => {
-        image.style.opacity = '1';
-        if (previous) previous.style.opacity = '0';
+        requestAnimationFrame(() => {
+          if (active !== image) return;
+          image.style.opacity = '1';
+          if (previous) previous.style.opacity = '0';
+          if (previous) setTimeout(() => previous.remove(), reducedMotion.matches ? 0 : transitionMs + 100);
+        });
       });
-      if (previous) setTimeout(() => previous.remove(), 700);
     };
     image.onerror = () => {
       if (token === requestId && fallback && src.includes('main.png')) show(base + 'main.jpg?v=' + Date.now(), alt, true);
@@ -69,5 +77,7 @@
   document.addEventListener('mk-product-image-ready', () => {
     if (!photos().some(img => img.src === currentSource)) advance();
   });
-  setInterval(advance, 4000);
+  setInterval(advance, slideIntervalMs);
 })();
+
+
