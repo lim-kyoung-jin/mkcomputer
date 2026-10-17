@@ -9,5 +9,18 @@
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#2563eb",
-  "icons": []
+  
+  "icons": [
+    {
+      "src": "/mkcomputer/mk-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/mkcomputer/mk-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+
 }
