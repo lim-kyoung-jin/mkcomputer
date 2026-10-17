@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   'use strict';
   const config = window.MK_CONFIG;
   const fallback = { address: '[임시] 실제 매장 주소 입력 예정', phone: '[임시] 전화번호 입력 예정', hours: '[임시] 영업시간 입력 예정' };
@@ -7,16 +7,24 @@
   document.getElementById('year').textContent = new Date().getFullYear();
   const pc = (color, i) => `<svg viewBox="0 0 180 220" role="img" aria-label="${['사무용','게이밍','작업용'][i]} PC 예시 일러스트"><path d="m38 37 73-20 39 26-72 23Z" fill="${i === 1 ? '#526555' : '#e7e7dc'}"/><path d="m38 37 40 29v133l-40-29Z" fill="${i === 1 ? '#253d32' : '#b8beb1'}"/><path d="m78 66 72-23v133l-72 23Z" fill="${i === 1 ? '#18382a' : '#f3f2e9'}" stroke="#82917d"/><path d="m46 52 24 18v102l-24-17Z" fill="${i === 1 ? '#152c25' : '#526659'}"/><path d="m50 76 14 10v34l-14-10Z" fill="#c88d63"/><path d="m49 131 17 12v10l-17-12Z" fill="#a8b49a"/>${[92,137].map(y=>`<ellipse cx="114" cy="${y}" rx="24" ry="22" transform="skewY(-17) translate(0 34)" fill="${i === 0 ? '#e3e5db' : '#3d5341'}" stroke="${i === 1 ? '#ed9a66' : '#a4b298'}" stroke-width="4"/><ellipse cx="114" cy="${y}" rx="9" ry="8" transform="skewY(-17) translate(0 34)" fill="#778d72"/>`).join('')}<path d="m85 181 58-18" stroke="#b2bca5" stroke-width="2"/><ellipse cx="138" cy="55" rx="3" ry="2" fill="#df8e5b"/></svg>`;
   const list = document.getElementById('product-list');
-  config.products.forEach((p,i) => {
-    const article = document.createElement('article'); article.className = 'product'; article.dataset.category = p.category;
-    const art = document.createElement('div'); art.className = 'product-art ' + p.color; art.innerHTML = '<span>MK / CUSTOM BUILD 0' + (i+1) + '</span>' + pc(p.color,i); article.append(art);
+  function renderProducts(products) {
+  list.replaceChildren();
+  products.forEach((p,i) => {
+    const article = document.createElement('article'); article.className = 'product'; article.dataset.category = p.category; article.dataset.productId = p.id || p.category;
+    const art = document.createElement('div'); art.className = 'product-art ' + p.color; art.innerHTML = '<span>MK / CUSTOM BUILD 0' + (i+1) + '</span>' + pc(p.color,p.category === 'gaming' ? 1 : p.category === 'creator' ? 2 : 0); article.append(art);
     const body = document.createElement('div'); body.className='product-body';
     const tag=document.createElement('p'); tag.className='eyebrow';tag.textContent=p.tag;
     const title=document.createElement('h3');title.textContent=p.name;
     const desc=document.createElement('p');desc.textContent=p.desc;
     const ul=document.createElement('ul');p.specs.forEach(s=>{const li=document.createElement('li');li.textContent=s;ul.append(li);});
-    const bottom=document.createElement('div');bottom.className='product-bottom';const price=document.createElement('strong');price.textContent='맞춤 견적 상담';const button=document.createElement('button');button.type='button';button.dataset.consult=p.name;button.textContent='구성 상담 ↗';button.setAttribute('aria-label',p.name+' 구성 상담');bottom.append(price,button);body.append(tag,title,desc,ul,bottom);article.append(body);list.append(article);
+    const bottom=document.createElement('div');bottom.className='product-bottom';const price=document.createElement('strong');price.textContent=p.price || '맞춤 견적 상담';const button=document.createElement('button');button.type='button';button.dataset.consult='맞춤 PC 견적';button.dataset.productName=p.name;button.textContent='구성 상담 ↗';button.setAttribute('aria-label',p.name+' 구성 상담');bottom.append(price,button);body.append(tag,title,desc,ul,bottom);article.append(body);list.append(article);
   });
+  const selectedFilter = document.querySelector('[data-filter].active')?.dataset.filter || 'all';
+  list.querySelectorAll('.product').forEach(card => { card.hidden = selectedFilter !== 'all' && card.dataset.category !== selectedFilter; });
+  if (window.MK_APPLY_PRODUCT_IMAGES) window.MK_APPLY_PRODUCT_IMAGES();
+  }
+  window.MK_RENDER_PRODUCTS = renderProducts;
+  renderProducts(config.products);
   const menu=document.querySelector('.menu'), nav=document.getElementById('navigation');
   const closeMenu=()=>{nav.classList.remove('open');menu.setAttribute('aria-expanded','false');menu.setAttribute('aria-label','메뉴 열기');};
   menu.addEventListener('click',()=>{const open=nav.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));menu.setAttribute('aria-label',open?'메뉴 닫기':'메뉴 열기');});
@@ -24,7 +32,15 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();});
   document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>{const selected=b===button;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});list.querySelectorAll('.product').forEach(card=>{card.hidden=button.dataset.filter!=='all'&&card.dataset.category!==button.dataset.filter;});}));
   const dialog=document.getElementById('consult-dialog');
-  document.querySelectorAll('[data-consult]').forEach(button=>button.addEventListener('click',event=>{event.preventDefault();document.getElementById('topic').value=button.dataset.consult;document.getElementById('copy-status').textContent='';dialog.showModal();}));
+  document.addEventListener('click',event=>{
+    const button = event.target.closest('[data-consult]');
+    if (!button) return;
+    event.preventDefault();
+    document.getElementById('topic').value=button.dataset.consult;
+    dialog.dataset.productName=button.dataset.productName || '';
+    document.getElementById('copy-status').textContent='';
+    dialog.showModal();
+  });
   document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
   const form = document.getElementById('consult-form');
@@ -42,12 +58,13 @@
       email: document.getElementById('customer-email').value.trim(),
       phone: document.getElementById('customer-phone').value.trim() || null,
       service: document.getElementById('topic').value,
-      message: document.getElementById('message').value.trim()
+      message: (dialog.dataset.productName ? '관심 상품: ' + dialog.dataset.productName + '\n' : '') + document.getElementById('message').value.trim()
     };
     if (!payload.customer_name || !payload.message) {
       status.textContent = '성함과 문의 내용을 입력해 주세요.';
       return;
     }
+    if (payload.message.length > 2000) { status.textContent = '문의 내용이 너무 깁니다. 상품명 포함 2000자 이내로 줄여 주세요.'; return; }
     const signature = JSON.stringify(payload);
     if (emailedSubmissions.has(signature)) {
       status.textContent = '이미 접수한 내용입니다. 추가 문의는 내용을 변경해 주세요.';
