@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "mkcomputer-v1";
+const CACHE_NAME = "mkcomputer-v2";
 
 const FILES = [
   "/mkcomputer/",
